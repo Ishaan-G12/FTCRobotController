@@ -1,81 +1,138 @@
 package org.firstinspires.ftc.teamcode;
 
+
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
 import com.qualcomm.robotcore.hardware.CRServo;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
-import org.firstinspires.ftc.teamcode.drive.MecanumDrive;
+
+
+
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+
 import org.firstinspires.ftc.teamcode.trajectorysequence.sequences.Actions;
 
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 
-@Autonomous(name="RR Auto: Forward 80in, 180 turn, Shoot 3", group="Main")
+
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+
+
+
+@Autonomous(name="RR Auto: Forward 80, Turn 180, Shoot 3", group="Main")
+
 public class AutoDriveRRBlue extends LinearOpMode {
 
+
+
     private CRServo servoRight, servoLeft;
+
     private DcMotor motorOuttake;
 
+
+
     @Override
+
     public void runOpMode() throws InterruptedException {
 
-        // ----- Initialize Shooting Mechanisms -----
+
+
+        // ------------------ Shooter Init ---------------------
+
         motorOuttake = hardwareMap.get(DcMotor.class, "motorOuttake");
-        servoLeft    = hardwareMap.get(CRServo.class, "servoLeft");
-        servoRight   = hardwareMap.get(CRServo.class, "servoRight");
 
-        // ----- Initialize Road Runner Drive -----
-        MecanumDrive drive = new MecanumDrive(hardwareMap);
+        motorOuttake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Start pose (0,0 facing forward)
-        Pose2d startPose = new Pose2d(0, 0, 0);
+
+
+        servoLeft  = hardwareMap.get(CRServo.class, "servoLeft");
+
+        servoRight = hardwareMap.get(CRServo.class, "servoRight");
+
+
+
+        // ------------------ Road Runner Init -----------------
+
+        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+
+
+
+        // Start in bottom-left BLUE corner, facing forward (+Y direction)
+
+        Pose2d startPose = new Pose2d(-63, -63, Math.toRadians(90));
+
         drive.setPoseEstimate(startPose);
+
+
 
         waitForStart();
 
-        if (!opModeIsActive()) return;
+        if (isStopRequested()) return;
 
-        // =====================================================
-        // == TRAJECTORY ACTIONS ==
-        // =====================================================
+
+
+        // ------------------ Drive + Turn ---------------------
 
         Actions.runBlocking(
+
                 drive.actionBuilder(startPose)
-                        .forward(80)          // Drive forward 80 inches
-                        .turn(Math.toRadians(180)) // Rotate 180 degrees
+
+                        .forward(80)                     // drive forward 80 inches
+
+                        .turn(Math.toRadians(180))       // turn around
+
                         .build()
+
         );
 
-        // =====================================================
-        // == SHOOT 3 RINGS ==
-        // =====================================================
-        shootRing();
-        sleep(200);
 
-        shootRing();
-        sleep(200);
 
-        shootRing();
-        sleep(200);
+        // ------------------ Shoot 3 Balls ---------------------
+
+        for (int i = 0; i < 3; i++) {
+
+            shootRing();
+
+            sleep(200);
+
+        }
+
+
+
+        // stop outtake
+
+        motorOuttake.setPower(0);
+
     }
 
-    // =====================================================
-    // == HELPER: Shoot one ring ==
-    // =====================================================
+
+
+    // ------------------ Helper: Shoot One Ring ------------------
+
     private void shootRing() {
-        // spin intake/outtake
+
         motorOuttake.setPower(0.85);
 
-        // fire ring
+
+
         servoLeft.setPower(0.75);
+
         servoRight.setPower(-0.75);
 
-        sleep(270);
 
-        // reset servos
+
+        sleep(250);
+
+
+
         servoLeft.setPower(0);
+
         servoRight.setPower(0);
 
-        sleep(200);
     }
+
 }
+
