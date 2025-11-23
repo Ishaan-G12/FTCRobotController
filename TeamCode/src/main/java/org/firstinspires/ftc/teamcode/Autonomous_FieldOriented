@@ -66,10 +66,13 @@ public class Autonomous_FieldOriented extends LinearOpMode {
             // Drive using field orientation
             DriveFieldRelative(forward * slowFactor, strafe * slowFactor, rotate * slowFactor);
 
+
             double outtakeSpeed = 0;
-
-            if (gamepad1.left_bumper)  outtakeSpeed = 0.65; // Slow down
-
+            if(gamepad1.left_bumper == true) {
+                outtakeSpeed = 0.65;
+            }else if(gamepad1.right_trigger == 1) {
+                outtakeSpeed = 0.85;
+            }
             motorOuttake.setPower(outtakeSpeed);
 
             // Servos
