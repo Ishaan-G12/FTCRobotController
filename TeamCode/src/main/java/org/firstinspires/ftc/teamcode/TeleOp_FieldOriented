@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
 @TeleOp(name="TeleOp: Basic Drive, Field Oriented", group="Main")
-public class Autonomous_FieldOriented extends LinearOpMode {
+public class TeleOp_FieldOriented extends LinearOpMode {
 
     private DcMotor motorLeftFront, motorRightFront, motorLeftBack, motorRightBack, motorOuttake;
     private IMU imu;
