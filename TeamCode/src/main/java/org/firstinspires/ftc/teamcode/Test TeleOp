@@ -40,6 +40,10 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
+
+             // === GET HEADING ===
+            double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
+            
             double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
             double x = gamepad1.left_stick_x;
             double rx = -gamepad1.right_stick_x;
@@ -68,21 +72,21 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
             double frontRightPower = (rotY - rotX - rx) / denominator;
             double backRightPower = (rotY + rotX - rx) / denominator;
 
+          // Speed modes
+            double speed = 1.0;
+            if (gamepad1.left_trigger > 0.1)  speed = 0.5;
+            if (gamepad1.right_trigger > 0.1) speed = 0.25;
+            
+            frontLeftPower  *= speed;
+            backLeftPower   *= speed;
+            frontRightPower *= speed;
+            backRightPower  *= speed;
+            
+            // Apply to actual motors
             frontLeftMotor.setPower(frontLeftPower);
             backLeftMotor.setPower(backLeftPower);
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
-
-             // Speed control
-            double speed = 1.0;
-            if (gamepad1.left_trigger > 0.1) speed = 0.5;
-            else if (gamepad1.right_trigger > 0.1) speed = 0.25;
-
-            leftFront.setPower(frontLeftPower * speed);
-            leftRear.setPower(backLeftPower * speed);
-            rightFront.setPower(frontRightPower * speed);
-            rightRear.setPower(backRightPower * speed);
-
             
             // Outtake motor
             double outtakeSpeed = 0;
@@ -91,7 +95,7 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
             else if (gamepad2.right_trigger > 0.1) outtakeSpeed = 0.85;
             else if (gamepad2.left_trigger > 0.1) outtakeSpeed = 0.75;
 
-            motorOuttake.setPower(outtakeSpeed);
+            DcMotor motorOuttake = hardwareMap.dcMotor.get("motorOuttake");
 
             // Shooting servos
             if (gamepad2.a) {
@@ -105,8 +109,8 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
                 sleep(270);
             }
 
-            servoLeft.setPower(0);
-            servoRight.setPower(0);
+            CRServo servoLeft  = hardwareMap.get(CRServo.class, "servoLeft");
+            CRServo servoRight = hardwareMap.get(CRServo.class, "servoRight");
 
             // ======== TELEMETRY =========
             telemetry.addData("Heading (Yaw)", heading);
@@ -114,3 +118,5 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
         }
     }
 }
+
+
