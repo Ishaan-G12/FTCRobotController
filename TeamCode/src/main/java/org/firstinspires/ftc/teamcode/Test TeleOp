@@ -73,6 +73,9 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
 
+            while (gamepad1.left_trigger > 0.1):
+                
+
             // Servos
             if (gamepad1.a) {
                 servoLeft.setPower(0.75);
