@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+    package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -73,8 +73,26 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
             frontRightMotor.setPower(frontRightPower);
             backRightMotor.setPower(backRightPower);
 
-            while (gamepad1.left_trigger > 0.1):
-                
+
+           // Slow mode 
+            double half_speed = 1.0;
+
+            if (gamepad1.left_trigger > 0.1) {
+                half_speed = 0.5; 
+            frontLeftMotor.setPower(frontLeftPower * half_speed);
+            backLeftMotor.setPower(backLeftPower * half_speed);
+            frontRightMotor.setPower(frontRightPower * half_speed);
+            backRightMotor.setPower(backRightPower * half_speed);
+            }
+            if (gamepad1.right_trigger > 0.1) {
+                half_speed = 0.25;  
+            frontLeftMotor.setPower(frontLeftPower * half_speed);
+            backLeftMotor.setPower(backLeftPower * half_speed);
+            frontRightMotor.setPower(frontRightPower * half_speed);
+            backRightMotor.setPower(backRightPower * half_speed);
+            }
+
+
 
             // Servos
             if (gamepad1.a) {
