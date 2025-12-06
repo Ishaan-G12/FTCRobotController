@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+
 import com.acmerobotics.roadrunner.drive.MecanumDrive;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -18,65 +19,61 @@ public class AutoBlue extends LinearOpMode {
     private DcMotor Outtake;
     private CRServo servoLeft, servoRight;
 
+
     @Override
     public void runOpMode() throws InterruptedException {
         Outtake = hardwareMap.get(DcMotor.class, "motorOuttake");
         servoLeft = hardwareMap.get(CRServo.class, "servoLeft");
         servoRight = hardwareMap.get(CRServo.class, "servoRight");
 
+
         Pose2d beginPose = new Pose2d(new Vector2d(-5, -63), Math.toRadians(90));
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setPoseEstimate(beginPose);
 
-        // -----------------------------
-        // Your original 3 trajectories
-        // -----------------------------
+
         Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
                 .forward(10)
                 .build();
 
         Trajectory traj2 = drive.trajectoryBuilder(new Pose2d())
-                .strafeLeft(45)
-                .build();
-
-        Trajectory traj3 = drive.trajectoryBuilder(new Pose2d())
-                .backward(8)
-                .build();
-
-        // ------------------------------------------------
-        // NEW: Tiny trajectory AFTER all movement
-        // Contains ONLY servo markers, no sleep()
-        // ------------------------------------------------
-        Trajectory servoAction = drive.trajectoryBuilder(new Pose2d())
-                .addTemporalMarker(() -> {
-                    servoLeft.setPower(0.75);
-                    servoRight.setPower(-0.75);
-                })
-                .addTemporalMarker(1.0, () -> {
-                    servoLeft.setPower(0);
-                    servoRight.setPower(0);
-                })
-                .forward(0.1)   // very small movement so markers execute
+                .strafeLeft(15)
                 .build();
 
         waitForStart();
 
-        Outtake.setPower(1);
+        Outtake.setPower(0.79);
+        sleep(3000);
         if (isStopRequested()) return;
 
-        // -----------------------------
-        // Run your original movements
-        // -----------------------------
         drive.followTrajectory(traj1);
-        drive.turn(Math.toRadians(15));
-        drive.followTrajectory(traj2);
-        drive.followTrajectory(traj3);
+        drive.turn(Math.toRadians(22));
+        sleep(500);
+        shootBalls(4);
 
-        // -----------------------------
-        // Run servo markers AFTER all 3
-        // -----------------------------
-        drive.followTrajectory(servoAction);
 
-        sleep(100);  // keeping your original small ending pause
+    }
+    private void shootBalls(int count) throws InterruptedException {
+        // spin up shooter motor once
+        Outtake.setPower(0.79);
+
+        for (int i = 0; i < count && opModeIsActive(); i++) {
+            // feed one ball using servos
+            servoLeft.setPower(0.8);
+            servoRight.setPower(-0.8);
+            sleep(250); // time to feed 1 ball
+
+            // stop feed briefly
+            servoLeft.setPower(-0.75);
+            servoRight.setPower(0.75);
+            sleep(50);
+
+            servoRight.setPower(0);
+            servoLeft.setPower(0);
+            sleep(2000); // gap between balls
+        }
+
+        // turn off shooter at end
+        Outtake.setPower(0.0);
     }
 }
