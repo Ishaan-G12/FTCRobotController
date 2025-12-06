@@ -2,49 +2,146 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@TeleOp
-public class MecanumTeleOp extends LinearOpMode {
+
+@TeleOp(name="TeleOp: Basic Drive", group="Main")
+public class PracticeTeleOp extends LinearOpMode {
+
+    private DcMotor leftFront, rightFront, leftRear, rightRear, motorOuttake;
+    private CRServo servoRight, servoLeft;
+    private double newTarget;
+
     @Override
-    public void runOpMode() throws InterruptedException {
-        // Declare our motors
-        // Make sure your ID's match your configuration
-        DcMotor frontLeftMotor = hardwareMap.dcMotor.get("frontLeftMotor");
-        DcMotor backLeftMotor = hardwareMap.dcMotor.get("backLeftMotor");
-        DcMotor frontRightMotor = hardwareMap.dcMotor.get("frontRightMotor");
-        DcMotor backRightMotor = hardwareMap.dcMotor.get("backRightMotor");
+    public void runOpMode() {
+        // === Initialize hardware ===
+        leftFront  = hardwareMap.get(DcMotor.class, "leftFront");
+        rightFront = hardwareMap.get(DcMotor.class, "rightFront");
+        leftRear   = hardwareMap.get(DcMotor.class, "leftRear");
+        rightRear  = hardwareMap.get(DcMotor.class, "rightRear");
+        motorOuttake = hardwareMap.get(DcMotor.class, "motorOuttake");
 
-        // Reverse the right side motors. This may be wrong for your setup.
-        // If your robot moves backwards when commanded to go forwards,
-        // reverse the left side instead.
-        // See the note about this earlier on this page.
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        //Servos
+        servoLeft = hardwareMap.get(CRServo.class, "servoLeft");
+        servoRight = hardwareMap.get(CRServo.class, "servoRight");
 
+        // Reverse one side so forward is forward
+        leftFront.setDirection(DcMotor.Direction.FORWARD);
+        leftRear.setDirection(DcMotor.Direction.FORWARD);
+        rightFront.setDirection(DcMotor.Direction.REVERSE);
+        rightRear.setDirection(DcMotor.Direction.REVERSE);
+
+        motorOuttake.setDirection(DcMotor.Direction.FORWARD);
+
+        // Encoders
+        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightRear.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Zero Power Behavior
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightRear.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+
+
+        // Wait for start button on Driver Station
         waitForStart();
 
-        if (isStopRequested()) return;
-
+        // === Run until stop is pressed ===
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
-            double rx = gamepad1.right_stick_x;
+            // Read stick values (note: forward stick is negative)
+            double y = gamepad1.left_stick_y;  // forward/backward
+            double x  = -gamepad1.left_stick_x;  // left/right turn
+            double rx = gamepad1.right_stick_x; //rotate
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio,
-            // but only if at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
+            // Arcade drive math
+            double frontLeftPower = y+x-rx;
+            double frontRightPower = y-x+rx;
+            double backRightPower = y+x+rx;
+            double backLeftPower = y-x-rx;
 
-            frontLeftMotor.setPower(frontLeftPower);
-            backLeftMotor.setPower(backLeftPower);
-            frontRightMotor.setPower(frontRightPower);
-            backRightMotor.setPower(backRightPower);
+            //make sure motors are [-1,1]
+//            double max = Math.max(Math.max(Math.abs(frontLeftPower), Math.abs(backLeftPower)), Math.max(Math.abs(frontRightPower), Math.abs(backRightPower)));
+//
+//            if(max > 1.0) {
+//                frontLeftPower /= max;
+//                backLeftPower /= max;
+//                frontRightPower /= max;
+//                backRightPower /= max;
+//            }
+
+
+            // Apply power to all 4 motors
+
+
+            double speed = 1.0;
+
+// left trigger = slow
+            if (gamepad1.left_trigger > 0.1) {
+                speed = 0.5;
+            }
+// right trigger = medium
+            else if (gamepad1.right_trigger > 0.1) {
+                speed = 0.25;
+            }
+            else {
+                speed = 1.0;
+            }
+
+// Apply scaled power to all 4 motors ONCE
+            leftFront.setPower(frontLeftPower * speed);
+            leftRear.setPower(backLeftPower * speed);
+            rightFront.setPower(frontRightPower * speed);
+            rightRear.setPower(backRightPower * speed);
+
+            telemetry.addData("FrontLeft Power", frontLeftPower*speed);
+            telemetry.addData("Frontright power", frontRightPower*speed);
+            telemetry.addData("backleft power", backLeftPower*speed);
+            telemetry.addData("backright power", backRightPower*speed);
+
+            telemetry.update();
+
+            //outtake motor
+            double outtakeSpeed = 0;
+            if (gamepad2.left_bumper) {
+                outtakeSpeed = 0.65;
+            } else if (gamepad2.right_bumper) {
+                outtakeSpeed = 0.7;
+            } else if (gamepad2.right_trigger > 0.1) {
+                outtakeSpeed = 0.85;
+            } else if (gamepad2.left_trigger > 0.1) {
+                outtakeSpeed = 0.75;
+            }
+            motorOuttake.setPower(outtakeSpeed);
+
+            //add 0 power behavior for brakes
+
+            //Servo Outtake
+            if(gamepad2.a) {
+                servoLeft.setPower(0.75);
+                servoRight.setPower(-0.75);
+                sleep(270);
+                servoLeft.setPower(0);
+                servoRight.setPower(0);
+
+            }
+            if(gamepad2.b) {
+                servoLeft.setPower(-0.75);
+                servoRight.setPower(0.75);
+                sleep(270);
+                servoLeft.setPower(0);
+                servoRight.setPower(0);
+
+            }
+
+            servoLeft.setPower(0);
+            servoRight.setPower(0);
+
+
         }
     }
 }
