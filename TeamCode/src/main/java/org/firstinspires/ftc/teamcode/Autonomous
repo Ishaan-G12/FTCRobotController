@@ -49,7 +49,10 @@ public class AutoBlue extends LinearOpMode {
                 .build();
 
         Trajectory traj2 = drive.trajectoryBuilder(new Pose2d())
-                .strafeLeft(30)
+                .strafeLeft(45)
+                .build();
+        Trajectory traj3 = drive.trajectoryBuilder(new Pose2d())
+                .backward(8)
                 .build();
 
         waitForStart();
