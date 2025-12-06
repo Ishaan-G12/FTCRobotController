@@ -1,138 +1,69 @@
 package org.firstinspires.ftc.teamcode;
 
 
-
+import com.acmerobotics.roadrunner.drive.MecanumDrive;
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-
 import com.qualcomm.robotcore.hardware.CRServo;
-
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-
-
+import org.apache.commons.math3.ode.events.Action;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
-import org.firstinspires.ftc.teamcode.trajectorysequence.sequences.Actions;
-
-
-
-import com.acmerobotics.roadrunner.geometry.Pose2d;
-
-
-
-@Autonomous(name="RR Auto: Forward 80, Turn 180, Shoot 3", group="Main")
-
-public class AutoDriveRRBlue extends LinearOpMode {
-
-
-
-    private CRServo servoRight, servoLeft;
-
-    private DcMotor motorOuttake;
-
+@Autonomous(name = "AutoBlue")
+public class AutoBlue extends LinearOpMode {
+    private DcMotor Outtake;
+    private CRServo servoLeft, servoRight;
 
 
     @Override
-
     public void runOpMode() throws InterruptedException {
-
-
-
-        // ------------------ Shooter Init ---------------------
-
-        motorOuttake = hardwareMap.get(DcMotor.class, "motorOuttake");
-
-        motorOuttake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-
-        servoLeft  = hardwareMap.get(CRServo.class, "servoLeft");
-
+        Outtake = hardwareMap.get(DcMotor.class, "motorOuttake");
+        servoLeft = hardwareMap.get(CRServo.class, "servoLeft");
         servoRight = hardwareMap.get(CRServo.class, "servoRight");
 
 
-
-        // ------------------ Road Runner Init -----------------
-
+        Pose2d beginPose = new Pose2d(new Vector2d(-5, -63), Math.toRadians(90));
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        drive.setPoseEstimate(beginPose);
 
 
+        Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
+                .forward(10)
+                .addTemporalMarker(2, () -> {
+                    // This marker runs two seconds into the trajectory
+                    telemetry.addData("Spinning Servos", "true");
+                    servoLeft.setPower(0.75);
+                    servoRight.setPower(-0.75);
+                    telemetry.update();
+                    // Run your action in here!
+                })
+                .addTemporalMarker(3.0, () -> {
+                    servoLeft.setPower(0);
+                    servoRight.setPower(0);
+                })
+                .build();
 
-        // Start in bottom-left BLUE corner, facing forward (+Y direction)
-
-        Pose2d startPose = new Pose2d(-63, -63, Math.toRadians(90));
-
-        drive.setPoseEstimate(startPose);
-
-
+        Trajectory traj2 = drive.trajectoryBuilder(new Pose2d())
+                .strafeLeft(30)
+                .build();
 
         waitForStart();
 
+        Outtake.setPower(1);
         if (isStopRequested()) return;
 
 
+        drive.followTrajectory(traj1);
+        drive.turn(Math.toRadians(15));
+        sleep(100);
 
-        // ------------------ Drive + Turn ---------------------
-
-        Actions.runBlocking(
-
-                drive.actionBuilder(startPose)
-
-                        .forward(80)                     // drive forward 80 inches
-
-                        .turn(Math.toRadians(180))       // turn around
-
-                        .build()
-
-        );
-
-
-
-        // ------------------ Shoot 3 Balls ---------------------
-
-        for (int i = 0; i < 3; i++) {
-
-            shootRing();
-
-            sleep(200);
-
-        }
-
-
-
-        // stop outtake
-
-        motorOuttake.setPower(0);
 
     }
 
-
-
-    // ------------------ Helper: Shoot One Ring ------------------
-
-    private void shootRing() {
-
-        motorOuttake.setPower(0.85);
-
-
-
-        servoLeft.setPower(0.75);
-
-        servoRight.setPower(-0.75);
-
-
-
-        sleep(250);
-
-
-
-        servoLeft.setPower(0);
-
-        servoRight.setPower(0);
-
-    }
 
 }
-
