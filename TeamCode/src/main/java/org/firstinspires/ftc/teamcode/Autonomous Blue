@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-
 import com.acmerobotics.roadrunner.drive.MecanumDrive;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -19,40 +18,45 @@ public class AutoBlue extends LinearOpMode {
     private DcMotor Outtake;
     private CRServo servoLeft, servoRight;
 
-
     @Override
     public void runOpMode() throws InterruptedException {
         Outtake = hardwareMap.get(DcMotor.class, "motorOuttake");
         servoLeft = hardwareMap.get(CRServo.class, "servoLeft");
         servoRight = hardwareMap.get(CRServo.class, "servoRight");
 
-
         Pose2d beginPose = new Pose2d(new Vector2d(-5, -63), Math.toRadians(90));
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         drive.setPoseEstimate(beginPose);
 
-
+        // -----------------------------
+        // Your original 3 trajectories
+        // -----------------------------
         Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
                 .forward(10)
-                .addTemporalMarker(2, () -> {
-                    // This marker runs two seconds into the trajectory
-                    telemetry.addData("Spinning Servos", "true");
-                    servoLeft.setPower(0.75);
-                    servoRight.setPower(-0.75);
-                    telemetry.update();
-                    // Run your action in here!
-                })
-                .addTemporalMarker(3.0, () -> {
-                    servoLeft.setPower(0);
-                    servoRight.setPower(0);
-                })
                 .build();
 
         Trajectory traj2 = drive.trajectoryBuilder(new Pose2d())
                 .strafeLeft(45)
                 .build();
+
         Trajectory traj3 = drive.trajectoryBuilder(new Pose2d())
                 .backward(8)
+                .build();
+
+        // ------------------------------------------------
+        // NEW: Tiny trajectory AFTER all movement
+        // Contains ONLY servo markers, no sleep()
+        // ------------------------------------------------
+        Trajectory servoAction = drive.trajectoryBuilder(new Pose2d())
+                .addTemporalMarker(() -> {
+                    servoLeft.setPower(0.75);
+                    servoRight.setPower(-0.75);
+                })
+                .addTemporalMarker(1.0, () -> {
+                    servoLeft.setPower(0);
+                    servoRight.setPower(0);
+                })
+                .forward(0.1)   // very small movement so markers execute
                 .build();
 
         waitForStart();
@@ -60,13 +64,19 @@ public class AutoBlue extends LinearOpMode {
         Outtake.setPower(1);
         if (isStopRequested()) return;
 
-
+        // -----------------------------
+        // Run your original movements
+        // -----------------------------
         drive.followTrajectory(traj1);
         drive.turn(Math.toRadians(15));
-        sleep(100);
+        drive.followTrajectory(traj2);
+        drive.followTrajectory(traj3);
 
+        // -----------------------------
+        // Run servo markers AFTER all 3
+        // -----------------------------
+        drive.followTrajectory(servoAction);
 
+        sleep(100);  // keeping your original small ending pause
     }
-
-
 }
